@@ -232,7 +232,7 @@ const TUNES = [
 ];
 const PAGES = [
   { m: '2.6698e-14 63.795 -67.122 -1.9305e-13 195 150.57', top: 282, kicker: 'Your Journey', title: 'Calming Workout', sub: 'Belly Breathing', min: 3, cy: 650, gx: 313, label: ['Exercise 1 of 5', 760] },
-  { m: '6.1192e-15 271.85 -286.03 -9.8004e-13 195 -1930', top: 275, kicker: 'Breathing Practice', title: 'Resonance<br>Frequency', sub: '5 seconds in · 5 seconds out', min: 2, cy: 650, gx: 316, label: ['Balanced ratio', 760], chip: '4:6' },
+  { m: '6.1192e-15 271.85 -286.03 -9.8004e-13 195 -1930', top: 275, kicker: 'Breathing Practice', title: 'Resonance<br>Frequency', sub: '5 seconds in · 5 seconds out', min: 2, cy: 650, gx: 316, label: ['Balanced ratio', 760] },
   { m: '-1.0785e-14 305.45 -321.38 -9.243e-13 195 -1510.5', top: 264, lh: 62, kicker: 'Breathing Practice', title: 'Sleep<br>Sequence', sub: 'Fine-tune your pattern', min: 2, cy: 653, gx: 327, label: ['Resonance ratio', 759] },
 ];
 
@@ -359,7 +359,7 @@ $('#screens').innerHTML = `
   <div id="stage">
     <div id="track">${PAGES.map(page).join('')}</div>
     <div class="pdots">${PAGES.map((_, i) => `<button data-act="page" data-page="${i}" aria-label="Page ${i + 1}"></button>`).join('')}</div>
-    <button class="pill abs" id="tunePill" data-go="today" style="left:16px;top:76px;z-index:3" aria-label="Change tune"></button>
+    <button class="pill abs" id="tunePill" data-go="today" style="left:16px;top:76px;z-index:3">Home</button>
   </div>
 
   <div class="details" data-grad="390 844 1.8018e-15 87.8 -92.379 -1.5331e-13 195 -374.5" style="background-color:#000">${dhead('Calming workout')}<div class="scroll">
@@ -394,7 +394,7 @@ const HINTS = {
   'plan': 'Week / Month / All switch the range. “Calming” opens Home.',
   'profile': 'Edit or the orb → ratio history. Plan overview → workout plan.',
   'ratio-history': 'Calibrate again → Set the pace sheet.',
-  'home': 'Swipe sideways (or tap the dots) to move between the three Home pages. Tap the bottom label, tap the background or swipe up for details. Left icon → timer, right icon → pace picker. Tune pill → back to Today.',
+  'home': 'Swipe sideways (or tap the dots) to move between the three Home pages. Tap the bottom label, tap the background or swipe up for details. Left icon → timer, right icon → pace picker. Home pill → back to Today.',
   'home:d': '✕ slides the details back down. ✓ → done, back to Today. Guided practice cards jump to that Home page.',
   'sheet-ratio': 'Chevrons change the ratio, Save applies it to the profile and ratio screens. Calibrate personal ratio → ratio history.',
   'sheet-clock': 'Minutes / Breaths tabs switch the two frames. Toggle, Save and Cancel work.',
@@ -411,7 +411,6 @@ function render() {
   $$('.pdots button').forEach((b, i) => b.classList.toggle('on', i === home.page));
   $$('.details').forEach((d, i) => d.classList.toggle('on', home.details && i === home.page));
   $('#home').classList.toggle('open', home.details);
-  $('#tunePill').textContent = TUNES[tune].name;
   const onHome = cur() === 'home';
   const key = sheet ? (sheet === 'sheet-clock' ? `sheet-clock:${clockMode}` : sheet) : onHome ? `home:${home.page}${home.details ? ':d' : ''}` : cur();
   $$('#index button').forEach(b => b.classList.toggle('on', b.dataset.jump === key));
