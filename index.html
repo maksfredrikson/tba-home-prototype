@@ -96,10 +96,17 @@
 
   /* home: pager of players */
   #home { background: #000; }
-  #stage { position: absolute; inset: 0; overflow: hidden; touch-action: none; transform-origin: 50% 40%; transition: transform .6s var(--spring), opacity .45s ease, border-radius .45s ease; }
-  #home.open #stage { transform: scale(.92); opacity: .4; border-radius: 36px; }
+  /* --p is the scroll progress between a player (0) and its details (1). Player UI and details UI travel a full
+     screen; the gradient is one canvas behind both and travels less, so the UI moves in parallax over it. */
+  #stage { position: absolute; inset: 0; overflow: hidden; touch-action: none; --p: 0; --glide: .95s cubic-bezier(.32,.72,0,1); }
+  #home.open #stage { --p: 1; }
+  #stage.dragging, #stage.dragging * { transition: none !important; }
   #track { position: absolute; inset: 0; transition: transform .5s var(--spring); will-change: transform; }
-  .page { position: absolute; top: 0; width: 390px; height: 844px; background-color: #000; background-size: 100% 100%; cursor: pointer; }
+  .page { position: absolute; top: 0; width: 390px; height: 844px; background-color: #000; overflow: hidden; }
+  .pbg { position: absolute; left: -200px; top: 0; width: 790px; height: 1400px; background-size: 100% 100%; transform-origin: 395px var(--oy); transform: translateY(calc(var(--p) * var(--ty))) scale(calc(1 + var(--p) * var(--ds))); transition: transform var(--glide); will-change: transform; }
+  .pui, .hud { position: absolute; inset: 0; transform: translateY(calc(var(--p) * -844px)); transition: transform var(--glide); will-change: transform; }
+  .pui { cursor: pointer; }
+  .hud { pointer-events: none; z-index: 3; } .hud #tunePill { pointer-events: auto; }
   .pdots { position: absolute; top: 68px; left: 0; width: 389px; height: 30px; display: flex; gap: 8px; align-items: center; justify-content: center; z-index: 3; pointer-events: none; }
   .pdots button { pointer-events: auto; position: relative; }
   .pdots button::after { content: ""; position: absolute; inset: -12px -4px; }
@@ -116,10 +123,9 @@
   .plabel { position: absolute; left: 16px; width: 358px; height: 44px; margin-top: -10px; text-align: center; font: 700 18px/44px Lato; }
 
   /* details: slide-up sheet over home */
-  .details { position: absolute; inset: 0; z-index: 6; background-size: 100% 100%; transform: translateY(103%); transition: transform .62s var(--spring); will-change: transform; box-shadow: 0 -24px 60px rgba(0,0,0,.55); pointer-events: none; }
-  .details.on { transform: none; pointer-events: auto; }
-  .details .r { opacity: 0; transform: translateY(30px); transition: opacity .3s ease, transform .3s ease; }
-  .details.on .r { opacity: 1; transform: none; transition: opacity .55s ease, transform .7s var(--spring); transition-delay: calc(130ms + var(--i, 0) * 45ms); }
+  .details { position: absolute; inset: 0; z-index: 2; transform: translateY(calc((1 - var(--p)) * 844px)); transition: transform var(--glide); will-change: transform; pointer-events: none; }
+  .details.on { pointer-events: auto; }
+  .details .r { transform: translateY(calc((1 - var(--p)) * (30px + var(--i, 0) * 14px))); transition: transform var(--glide); }
   .dhead { position: absolute; left: 0; top: 58px; width: 390px; height: 48px; z-index: 4; }
   .dhead button { position: absolute; top: 0; width: 48px; height: 48px; display: grid; place-items: center; }
   .dhead p { text-align: center; line-height: 48px; }
@@ -218,9 +224,9 @@ const ICO = {
 const HEAD = [[26,50,83,1,0],[42,85,118,1,.375],[66,105,127,1,.48958],[95,117,126,1,.53255],[124,129,125,1,.57552],[183,152,123,1,.66146],[233,144,75,1,.73438],[229,122,53,1,.77604],[225,100,31,1,.81771],[168,59,22,1,.85938],[139,39,17,1,.88021],[111,19,13,1,.90104]];
 const TAIL = [[83,14,10,1,.92208],[55,9,6,1,.94311],[28,5,3,1,.96415],[14,2,2,1,.97466],[0,0,0,1,.98518]];
 const ORB = [[55,9,6,.5,.95052],[0,0,0,0,1]];
-function grad(w, h, m, orb) {
+function grad(w, h, m, orb, x0 = 0) {
   const stops = HEAD.concat(orb ? ORB : TAIL).map(([r,g,b,a,o]) => `<stop stop-color='rgba(${r},${g},${b},${a})' offset='${o}'/>`).join('');
-  const svg = `<svg viewBox='0 0 ${w} ${h}' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect width='100%' height='100%' fill='url(#g)'/><defs><radialGradient id='g' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(${m})'>${stops}</radialGradient></defs></svg>`;
+  const svg = `<svg viewBox='${x0} 0 ${w} ${h}' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='${x0}' y='0' width='${w}' height='${h}' fill='url(#g)'/><defs><radialGradient id='g' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(${m})'>${stops}</radialGradient></defs></svg>`;
   return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
 }
 
@@ -231,25 +237,24 @@ const TUNES = [
   { name: 'Naomi',  desc: 'Soft piano, a warm room.<br>Settle into the pace.',  grad: '280 292 4.3933e-15 94.053 -205.36 -3.3907e-13 140 -667.73' },
 ];
 const PAGES = [
-  { m: '2.6698e-14 63.795 -67.122 -1.9305e-13 195 150.57', top: 282, kicker: 'Your Journey', title: 'Calming Workout', sub: 'Belly Breathing', min: 3, cy: 650, gx: 313, label: ['Exercise 1 of 5', 760] },
-  { m: '6.1192e-15 271.85 -286.03 -9.8004e-13 195 -1930', top: 275, kicker: 'Breathing Practice', title: 'Resonance<br>Frequency', sub: '5 seconds in · 5 seconds out', min: 2, cy: 650, gx: 316, label: ['Balanced ratio', 760] },
-  { m: '-1.0785e-14 305.45 -321.38 -9.243e-13 195 -1510.5', top: 264, lh: 62, kicker: 'Breathing Practice', title: 'Sleep<br>Sequence', sub: 'Fine-tune your pattern', min: 2, cy: 653, gx: 327, label: ['Resonance ratio', 759] },
+  { m: '2.6698e-14 63.795 -67.122 -1.9305e-13 195 150.57', dm: '1.8018e-15 87.8 -92.379 -1.5331e-13 195 -374.5', top: 282, kicker: 'Your Journey', title: 'Calming Workout', sub: 'Belly Breathing', min: 3, cy: 650, gx: 313, label: ['Exercise 1 of 5', 760] },
+  { m: '6.1192e-15 271.85 -286.03 -9.8004e-13 195 -1930', dm: '5.4788e-15 243.4 -256.09 -8.171e-13 195 -1930', top: 275, kicker: 'Breathing Practice', title: 'Resonance<br>Frequency', sub: '5 seconds in · 5 seconds out', min: 2, cy: 650, gx: 316, label: ['Balanced ratio', 760] },
+  { m: '-1.0785e-14 305.45 -321.38 -9.243e-13 195 -1510.5', dm: '-9.9574e-15 282 -296.71 -8.5334e-13 195 -1744', top: 264, lh: 62, kicker: 'Breathing Practice', title: 'Sleep<br>Sequence', sub: 'Fine-tune your pattern', min: 2, cy: 653, gx: 327, label: ['Resonance ratio', 759] },
 ];
 
 const lib = (k, t, attrs) => `<button class="libcard r" ${attrs || 'data-toast="Not part of this prototype"'}><p>${k}</p><h3>${t}</h3></button>`;
 const lane = top => `<p class="b r" style="margin:${top}px 16px 8px;font-size:18px">Guided practices</p><div class="lane">${lib('Practice Introduction', 'Guided Resonance', 'data-act="page" data-page="1"')}${lib('Breathing Practice', 'Focusing Breath', 'data-act="page" data-page="2"')}</div>`;
 const dhead = t => `<div class="dhead"><button data-act="close-details" style="left:0" aria-label="Close">${img('cross', 28)}</button><p>${t}</p><button data-go="today" data-toast="Marked as done" style="right:0;top:0" aria-label="Done">${img('check-solid', 32)}</button></div>`;
 
-const page = (o, i) => `<div class="page" data-act="details" data-grad="390 844 ${o.m}" style="left:${i * 390}px">
-    ${o.chip ? `<button class="pill abs" data-sheet="sheet-ratio" style="left:309px;top:76px;width:55px">${o.chip}</button>` : ''}
+const page = (o, i) => `<div class="page" style="left:${i * 390}px"><div class="pbg"></div><div class="pui" data-act="details">
     <div class="ptitle" style="top:${o.top}px"><p>${o.kicker}</p><h2 class="serif" ${o.lh ? `style="line-height:${o.lh}px"` : ''}>${o.title}</h2><small>${o.sub}</small></div>
     <button class="pico" data-sheet="sheet-clock" style="left:82px;top:${o.cy + 40}px" aria-label="Set the timer">${ICO.clock}</button>
     <button class="hero" data-act="play" data-secs="${o.min * 60}" style="top:${o.cy}px"><span class="ico">${img('play', 24)}<i class="pause"></i></span><span class="lbl">${o.min} min</span></button>
     <button class="pico" data-sheet="sheet-ratio" style="left:${o.gx}px;top:${o.cy + 40}px" aria-label="Set the pace">${ICO.glass}</button>
     <button class="plabel" data-act="details" style="top:${o.label[1]}px">${o.label[0]}</button>
-  </div>`;
+  </div>${DETAILS[i]}</div>`;
 
-const about = (m, t1, t2, bg) => `<div class="details" data-grad="390 844 ${m}" style="background-color:${bg}">${dhead('Resonance Breath')}
+const about = (t1, t2) => `<div class="details">${dhead('Resonance Breath')}
     <div class="scroll"><div style="margin:${t1}px 16px 0">
       <p class="b r" style="font-size:24px;line-height:24px">About Resonance Breath</p>
       <div class="r" style="display:flex;gap:8.4px;align-items:center;margin-top:4.2px"><i style="width:2px;height:32px;background:rgba(255,255,255,.5)"></i><p style="font-size:14px;line-height:20px">Eddie Stern, MSc<br>Yoga Teacher, Researcher, Author</p></div>
@@ -354,15 +359,10 @@ $('#screens').innerHTML = `
   </div>
 </div></section>
 
-<!-- Home: three player pages, each with a slide-up details sheet -->
-<section class="screen" id="home">
-  <div id="stage">
-    <div id="track">${PAGES.map(page).join('')}</div>
-    <div class="pdots">${PAGES.map((_, i) => `<button data-act="page" data-page="${i}" aria-label="Page ${i + 1}"></button>`).join('')}</div>
-    <button class="pill abs" id="tunePill" data-go="today" style="left:16px;top:67px;z-index:3">Home</button>
-  </div>
+`;
 
-  <div class="details" data-grad="390 844 1.8018e-15 87.8 -92.379 -1.5331e-13 195 -374.5" style="background-color:#000">${dhead('Calming workout')}<div class="scroll">
+/* Details content for the three Home pages (Calming workout, Resonance Breath, Resonance Breath alt) */
+const DETAILS = [`<div class="details">${dhead('Calming workout')}<div class="scroll">
     <div style="margin:127px 16px 0;width:358px;display:flex;flex-direction:column;gap:18px">
       <div class="r" style="display:flex;gap:10px;align-items:center">${img('replay', 24)}<p class="b" style="font-size:18px">16 minutes · 5 exercises</p></div>
       <div class="card r" style="padding:18px 20px;display:flex;flex-direction:column;gap:8px"><p style="font-size:18px;line-height:26px">Personalized workout briefing</p><p style="font-size:14px;line-height:19px;color:rgba(255,255,255,.7)">Move from gentle belly breathing to a guided relaxation. Follow each exercise at a comfortable pace.</p></div>
@@ -372,14 +372,28 @@ $('#screens').innerHTML = `
         ${[['Belly Breathing',3],['Cyclic Sighing',2],['Left Nostril',3],['Humming Breath',3],['Guided Relaxation',5]].map(([t,m],i) => `<div ${i ? 'data-toast="Only exercise 1 is wired in this prototype"' : 'data-act="close-details"'} style="cursor:pointer"><span class="n">${i+1}</span><span class="t">${t}</span><span class="m">${m} min</span></div>`).join('')}
       </div>
     </div>${lane(21)}
-  </div></div>
-  ${about('5.4788e-15 243.4 -256.09 -8.171e-13 195 -1930', 142, 24, '#1a1e23')}
-  ${about('-9.9574e-15 282 -296.71 -8.5334e-13 195 -1744', 143, 36, '#000')}
-</section>
-`;
+  </div></div>`, about(142, 24), about(143, 36)];
+
+/* Home: three pages; each page is a player and its details on one gradient canvas */
+$('#screens').insertAdjacentHTML('beforeend', `
+<section class="screen" id="home">
+  <div id="stage">
+    <div id="track">${PAGES.map(page).join('')}</div>
+    <div class="hud">
+      <div class="pdots">${PAGES.map((_, i) => `<button data-act="page" data-page="${i}" aria-label="Page ${i + 1}"></button>`).join('')}</div>
+      <button class="pill abs" id="tunePill" data-go="today" style="left:16px;top:67px">Home</button>
+    </div>
+  </div>
+</section>`);
 
 $$('[data-grad]').forEach(el => { const [w, h, ...m] = el.dataset.grad.split(' '); el.style.backgroundImage = grad(w, h, m.join(' '), el.hasAttribute('data-orb')); el.style.backgroundSize = '100% 100%'; });
 $$('.details').forEach(d => $$('.r', d).forEach((el, i) => el.style.setProperty('--i', i)));
+/* One gradient canvas per page: the details gradient is the player gradient scaled about its centre and moved up */
+$$('.pbg').forEach((el, i) => {
+  const a = PAGES[i].m.split(' ').map(Number), b = PAGES[i].dm.split(' ').map(Number);
+  el.style.backgroundImage = grad(790, 1400, PAGES[i].m, false, -200);
+  el.style.setProperty('--oy', a[5] + 'px'); el.style.setProperty('--ty', (b[5] - a[5]) + 'px'); el.style.setProperty('--ds', b[1] / a[1] - 1);
+});
 
 /* ---------- navigation ---------- */
 const FRAMES = [
@@ -394,8 +408,8 @@ const HINTS = {
   'plan': 'Week / Month / All switch the range. “Calming” opens Home.',
   'profile': 'Edit or the orb → ratio history. Plan overview → workout plan.',
   'ratio-history': 'Calibrate again → Set the pace sheet.',
-  'home': 'Swipe sideways (or tap the dots) to move between the three Home pages. Tap the bottom label, tap the background or swipe up for details. Left icon → timer, right icon → pace picker. Home pill → back to Today.',
-  'home:d': '✕ slides the details back down. ✓ → done, back to Today. Guided practice cards jump to that Home page.',
+  'home': 'Swipe sideways (or tap the dots) to move between the three Home pages. Tap the bottom label or the background, or drag up, to scroll to details over the same gradient. Left icon → timer, right icon → pace picker. Home pill → back to Today.',
+  'home:d': '✕ (or dragging down from the top) scrolls back to the player. ✓ → done, back to Today. Guided practice cards jump to that Home page.',
   'sheet-ratio': 'Chevrons change the ratio, Save applies it to the profile and ratio screens. Calibrate personal ratio → ratio history.',
   'sheet-clock': 'Minutes / Breaths tabs switch the two frames. Toggle, Save and Cancel work.',
 };
@@ -473,23 +487,34 @@ $('#phone').addEventListener('click', e => {
 });
 
 /* ---------- gestures ---------- */
-/* Home: drag sideways to change page, swipe up for details */
-let drag = null; const track = $('#track');
-$('#stage').addEventListener('pointerdown', e => { if (!home.details && !sheet) drag = { x: e.clientX, y: e.clientY, dx: 0, dy: 0, h: null }; });
+/* Home: drag sideways to change page; drag up to scroll to details and down to come back (the canvas follows the finger) */
+let drag = null; const track = $('#track'), stage = $('#stage'), TRAVEL = 560;
+const endDrag = () => { track.style.transition = ''; stage.classList.remove('dragging'); stage.style.removeProperty('--p'); };
+stage.addEventListener('pointerdown', e => { if (sheet) return; drag = { x: e.clientX, y: e.clientY, dx: 0, dy: 0, h: null, open: home.details, top: !home.details || $('.scroll', $$('.details')[home.page]).scrollTop <= 0 }; });
 addEventListener('pointermove', e => {
   if (!drag) return;
   drag.dx = (e.clientX - drag.x) / fitScale; drag.dy = (e.clientY - drag.y) / fitScale;
   if (drag.h === null && Math.hypot(drag.dx, drag.dy) > 8) drag.h = Math.abs(drag.dx) > Math.abs(drag.dy);
-  if (drag.h) { const edge = (home.page === 0 && drag.dx > 0) || (home.page === PAGES.length - 1 && drag.dx < 0); track.style.transition = 'none'; track.style.transform = `translateX(${-home.page * 390 + drag.dx * (edge ? .3 : 1)}px)`; }
+  if (drag.h === null) return;
+  if (drag.h) {
+    if (drag.open) return;
+    const edge = (home.page === 0 && drag.dx > 0) || (home.page === PAGES.length - 1 && drag.dx < 0);
+    track.style.transition = 'none'; track.style.transform = `translateX(${-home.page * 390 + drag.dx * (edge ? .3 : 1)}px)`;
+    return;
+  }
+  if (drag.open && !(drag.top && drag.dy > 0)) return;
+  const p = Math.max(0, Math.min(1, drag.open ? 1 - drag.dy / TRAVEL : -drag.dy / TRAVEL));
+  stage.classList.add('dragging'); stage.style.setProperty('--p', p);
 });
 addEventListener('pointerup', () => {
-  if (!drag) return; const d = drag; drag = null; track.style.transition = '';
+  if (!drag) return; const d = drag; drag = null; endDrag();
   if (d.h === null) return;
   lastDrag = Date.now();
-  if (d.h) { if (Math.abs(d.dx) > 60) setPage(home.page + (d.dx < 0 ? 1 : -1)); else render(); }
-  else if (d.dy < -50) openDetails();
+  if (d.h) { if (!d.open) { if (Math.abs(d.dx) > 60) setPage(home.page + (d.dx < 0 ? 1 : -1)); else render(); } }
+  else if (!d.open) { if (d.dy < -80) openDetails(); }
+  else if (d.top && d.dy > 80) { home.details = false; render(); }
 });
-addEventListener('pointercancel', () => { if (drag) { drag = null; track.style.transition = ''; render(); } });
+addEventListener('pointercancel', () => { if (drag) { drag = null; endDrag(); render(); } });
 
 /* Today: swipe the tune stack to bring the next musician forward */
 let sx = null; const st = $('#stack');
