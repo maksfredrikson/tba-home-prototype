@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TBA · Home and onboarding prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1e23; --n900: #313539; --n700: #5f6165; --light: #f3f7ab; --mint: #94c7b8;
+    --w10: rgba(255,255,255,.1); --w06: rgba(255,255,255,.06); --w60: rgba(255,255,255,.6);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { background: #0d0f12; color: #fff; font: 400 16px/24px Lato, system-ui, sans-serif; display: flex; overflow: hidden; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-align: inherit; }
+  .serif { font-family: Merriweather, Georgia, serif; font-weight: 700; }
+  b, .b { font-weight: 700; }
+
+  /* ---------- prototype chrome ---------- */
+  aside { width: 264px; flex: none; padding: 20px 14px; overflow-y: auto; border-right: 1px solid rgba(255,255,255,.08); font-size: 13px; line-height: 18px; }
+  aside h1 { font: 700 15px/20px Lato; margin: 0 6px 2px; }
+  aside p.sub { color: var(--w60); margin: 0 6px 14px; }
+  aside .row { display: flex; gap: 6px; margin: 0 6px 14px; }
+  aside .row button { flex: 1; height: 30px; border-radius: 8px; background: var(--w10); text-align: center; }
+  aside .row button:hover { background: rgba(255,255,255,.18); }
+  aside ol { list-style: none; }
+  aside li button { width: 100%; padding: 7px 8px; border-radius: 8px; display: flex; gap: 8px; color: rgba(255,255,255,.75); }
+  aside li button:hover { background: var(--w06); }
+  aside li button.on { background: var(--w10); color: #fff; }
+  aside li span { color: rgba(255,255,255,.35); width: 16px; flex: none; text-align: right; }
+  aside label { display: flex; gap: 8px; align-items: center; margin: 14px 6px 8px; color: var(--w60); cursor: pointer; }
+  aside #hint { margin: 0 6px; padding: 10px; border-radius: 8px; background: var(--w06); color: rgba(255,255,255,.8); }
+  main { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; }
+  #fit { width: 390px; height: 844px; flex: none; transform-origin: center; }
+  @media (max-width: 760px) { aside { display: none; } }
+
+  /* ---------- phone ---------- */
+  #phone { position: relative; width: 390px; height: 844px; border-radius: 40px; overflow: hidden; background: var(--bg); box-shadow: 0 0 0 1px rgba(255,255,255,.1), 0 30px 80px rgba(0,0,0,.6); user-select: none; -webkit-user-select: none; }
+  .status { position: absolute; inset: 0 0 auto 0; height: 59px; z-index: 5; pointer-events: none; }
+  .status p { position: absolute; left: 27px; top: 20px; width: 54px; text-align: center; font: 600 17px/22px -apple-system, "SF Pro Text", system-ui, sans-serif; letter-spacing: -.408px; }
+  .status img { position: absolute; left: calc(83.33% - .3px); top: 23px; transform: translateX(-50%); }
+  .home-ind { position: absolute; left: 50%; bottom: 8px; width: 134px; height: 5px; border-radius: 100px; background: #fff; transform: translateX(-50%); z-index: 30; pointer-events: none; }
+
+  .screen { position: absolute; inset: 0; background-color: var(--bg); background-size: 100% 100%; opacity: 0; pointer-events: none; transform: translateY(14px); transition: opacity .22s ease, transform .28s ease; }
+  .screen.active { opacity: 1; pointer-events: auto; transform: none; z-index: 2; }
+  .scroll { position: absolute; inset: 0; overflow-y: auto; scrollbar-width: none; padding-bottom: 56px; }
+  .scroll::-webkit-scrollbar, .lane::-webkit-scrollbar { display: none; }
+  .abs { position: absolute; }
+  .hot #phone [data-go], .hot #phone [data-sheet], .hot #phone [data-back], .hot #phone [data-act] { outline: 1.5px dashed rgba(243,247,171,.85); outline-offset: -2px; }
+
+  .pill { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 3.5px 16px 4.5px; border-radius: 48px; background: var(--w10); font: 400 16px/24px Lato; white-space: nowrap; }
+  .pill:active, .libcard:active, .btn:active, .hero:active { filter: brightness(1.25); }
+  .card { border-radius: 20px; background: var(--w06); overflow: hidden; }
+  .libcard { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; width: 358px; height: 112px; flex: none; border-radius: 12px; background: var(--w10); text-align: center; padding: 0 16.8px; }
+  .libcard h3 { font: 700 25px/1.3 Merriweather, serif; }
+  .libcard.row { flex-direction: row; justify-content: space-between; height: 59px; padding: 0 8px 0 16px; }
+  .libcard.row span.t { width: 48px; height: 48px; display: grid; place-items: center; }
+  .btn { display: flex; align-items: center; justify-content: center; border-radius: 12px; font: 700 16px/24px Lato; text-align: center; }
+  .btn.white { background: #fff; color: var(--bg); height: 56px; }
+  .btn.ghost { background: var(--w10); height: 52px; }
+  .back { position: absolute; left: 16px; top: 66px; z-index: 4; }
+  .muted { color: var(--w60); }
+
+  /* today */
+  .bars { display: flex; gap: 5px; } .bars i { width: 76.75px; height: 5px; border-radius: 3px; background: var(--mint); } .bars i.off { background: rgba(148,199,184,.15); }
+  .stack { position: relative; height: 454px; }
+  .stack .w { position: absolute; display: flex; align-items: center; justify-content: center; }
+  .tune { border-radius: 24px; border: 1px solid rgba(255,255,255,.2); background-size: 100% 100%; }
+  #tuneCard { transition: transform .3s ease, opacity .2s ease; }
+  .dots { position: absolute; top: 417px; left: 185.68px; display: flex; gap: 8px; align-items: center; }
+  .dots button { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.5); transition: width .2s, background .2s; }
+  .dots button.on { width: 22px; background: #fff; }
+
+  /* charts */
+  .chart { position: relative; overflow: hidden; }
+  .chart .g { position: absolute; left: 0; height: 1px; background: rgba(255,255,255,.09); }
+  .chart .ax { position: absolute; font: 400 10px/14px Lato; color: rgba(255,255,255,.45); width: 40px; }
+  .chart .bar { position: absolute; border-radius: 5px; }
+  .chart .lb { position: absolute; top: 136px; width: 30px; margin-left: -15px; text-align: center; font: 400 12px/16px Lato; color: rgba(255,255,255,.45); }
+  .chart .lb.on { color: #fff; font-weight: 700; }
+  .seg { display: flex; gap: 4px; padding: 4px; border-radius: 24px; background: rgba(255,255,255,.04); width: 358px; }
+  .seg button { width: 114px; height: 32px; border-radius: 48px; text-align: center; }
+  .seg button.on { background: rgba(255,255,255,.16); }
+
+  /* players */
+  .slider { position: absolute; top: 80px; left: calc(50% - .5px); transform: translateX(-50%); padding: 12px; margin-top: -12px; }
+  .ptitle { position: absolute; left: 16px; width: 358px; display: flex; flex-direction: column; gap: 8.4px; text-align: center; }
+  .ptitle h2 { font: 700 48px/52px Merriweather, serif; }
+  .ptitle small { font: 400 14px/20px Lato; }
+  .hero { position: absolute; left: 119px; height: 80px; min-width: 160px; padding: 24px 36px; border-radius: 48px; background: #fff; color: var(--bg); display: flex; align-items: center; gap: 8px; font: 700 18px/24px Lato; }
+  .hero .ico { width: 24px; height: 24px; position: relative; flex: none; }
+  .hero .pause { display: none; position: absolute; inset: 4px 6px; border: solid var(--bg); border-width: 0 4px; }
+  .hero.playing img { display: none; } .hero.playing .pause { display: block; }
+  .hero .lbl { flex: 1; text-align: center; font-variant-numeric: tabular-nums; }
+  .pico { position: absolute; width: 44px; height: 44px; display: grid; place-items: center; transform: translate(-50%, -50%); }
+  .plabel { position: absolute; left: 16px; width: 358px; text-align: center; font: 700 18px/24px Lato; }
+  .tl { position: absolute; left: 0; top: 59px; width: 48px; height: 48px; }
+
+  /* details */
+  .dhead { position: absolute; left: 0; top: 58px; width: 390px; height: 48px; z-index: 4; }
+  .dhead button { position: absolute; top: 0; width: 48px; height: 48px; display: grid; place-items: center; }
+  .dhead p { text-align: center; line-height: 48px; }
+  .lane { display: flex; gap: 8px; overflow-x: auto; padding: 0 16px; scrollbar-width: none; }
+  .lane .libcard { width: 310px; height: 163px; gap: 12.6px; }
+  .seq > div { display: flex; gap: 12px; align-items: center; padding: 13px 18px; }
+  .seq .n { width: 22px; font: 700 20px/27px Lato; color: rgba(255,255,255,.4); }
+  .seq .t { width: 216px; font: 700 15px/20px Lato; }
+  .seq .m { width: 60px; text-align: right; font: 400 13px/18px Lato; color: var(--w60); }
+  .act { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.04); font: 700 13px/18px Lato; color: rgba(255,255,255,.85); }
+  .act span { width: 115px; }
+
+  /* sheets */
+  #scrim { position: absolute; inset: 0; background: rgba(0,0,0,.55); opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 10; }
+  #scrim.on { opacity: 1; pointer-events: auto; }
+  .sheet { position: absolute; left: 0; bottom: 0; width: 390px; background: var(--n900); border-radius: 16px 16px 0 0; transform: translateY(105%); transition: transform .32s cubic-bezier(.2,.8,.2,1); z-index: 11; overflow: hidden; }
+  .sheet.on { transform: none; }
+  .handle { height: 17px; position: relative; } .handle::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 44px; height: 5px; margin-left: -22px; border-radius: 100px; background: #fff; }
+  .banner { position: absolute; top: 331px; width: 162px; height: 113px; border-radius: 12px; background: var(--w10); padding: 16px; }
+  .banner div { display: flex; justify-content: space-between; align-items: center; font: 700 18px/24px Lato; }
+  .banner p { margin-top: 8px; width: 130px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .tabs { display: flex; height: 42px; padding: 3px; border-radius: 8px; background: var(--bg); width: 358px; }
+  .tabs button { flex: 1; border-radius: 6px; text-align: center; color: rgba(255,255,255,.5); }
+  .tabs button.on { background: var(--n900); color: #fff; }
+  .toggle { position: relative; width: 64px; height: 40px; flex: none; }
+  .toggle::before { content: ""; position: absolute; inset: 8px 0; border-radius: 30px; background: var(--n700); }
+  .toggle::after { content: ""; position: absolute; top: 10px; left: 30px; width: 32px; height: 20px; border-radius: 30px; background: var(--light); transition: left .2s, background .2s; }
+  .toggle.off::after { left: 2px; background: rgba(255,255,255,.6); }
+  #toast { position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); padding: 8px 14px; border-radius: 20px; background: rgba(0,0,0,.75); font-size: 13px; white-space: nowrap; opacity: 0; transition: opacity .2s; z-index: 40; pointer-events: none; }
+  #toast.on { opacity: 1; }
+</style>
+</head>
+<body>
+<aside>
+  <h1>Home and onboarding</h1>
+  <p class="sub">Clickable prototype · 13 frames</p>
+  <div class="row"><button id="navBack">← Back</button><button id="navHome">Today</button></div>
+  <ol id="index"></ol>
+  <label><input type="checkbox" id="hot"> Show hotspots</label>
+  <div id="hint"></div>
+</aside>
+<main><div id="fit"><div id="phone">
+  <div class="status"><p>9:41</p><img src="assets/status-right.svg" width="77.4" height="13" alt=""></div>
+  <div id="screens"></div>
+  <div id="scrim" data-close></div>
+
+  <!-- Ratio sheet · 5:1516 -->
+  <section class="sheet" id="sheet-ratio" style="height:646px">
+    <div class="handle" style="margin:0 16px"></div>
+    <p class="serif abs" style="top:44px;left:0;width:390px;text-align:center;font-size:24px;line-height:30px;color:#f2f2f2">Set the pace</p>
+    <button class="abs" data-act="ratio-up" style="left:171px;top:102px;width:48px;height:48px;display:grid;place-items:center"><img src="assets/chevron-left.svg" width="28" height="28" style="transform:rotate(90deg)" alt="Faster"></button>
+    <p class="abs b" id="sheetRatio" style="top:165px;left:0;width:390px;text-align:center;font-size:48px;line-height:48px">5.4 : 5.6</p>
+    <button class="abs" data-act="ratio-down" style="left:171px;top:247px;width:48px;height:48px;display:grid;place-items:center"><img src="assets/chevron-left.svg" width="28" height="28" style="transform:rotate(-90deg)" alt="Slower"></button>
+    <div class="banner" style="left:24px"><div><span id="sheetBpm">6 bpm</span><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 10h4l2-6 3 12 3-9 1.5 3H19"/></svg></div><p>Slow breath of medium intensity</p></div>
+    <div class="banner" style="left:202px"><div><span>1:1</span><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="10" cy="10" r="3"/><path d="M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3M4 4l2.1 2.1M13.9 13.9 16 16M16 4l-2.1 2.1M6.1 13.9 4 16" stroke-linecap="round"/></svg></div><p>Balanced inhale<br>to exhale ratio</p></div>
+    <button class="btn white abs" data-act="ratio-save" style="left:24px;top:468px;width:342px">Save</button>
+    <button class="abs b" data-go="ratio-history" style="left:24px;top:540px;width:342px;height:48px;display:flex;align-items:center;justify-content:center;gap:12px">Calibrate personal ratio <span style="background:var(--light);color:var(--bg);font:700 12px/12px Lato;padding:6px 10px;border-radius:48px">NEW</span></button>
+  </section>
+
+  <!-- Clock sheet · 6:2751 (Minutes) / 6:2723 (Breaths) -->
+  <section class="sheet" id="sheet-clock" style="height:699px">
+    <div style="margin:0 16px;width:358px;display:flex;flex-direction:column;gap:24px;align-items:center">
+      <div class="handle" style="width:358px"></div>
+      <p class="serif" style="font-size:24px;line-height:30px;color:#f2f2f2">Set the timer</p>
+      <div class="tabs" id="clockTabs"><button class="on" data-act="clock-minutes">Minutes</button><button data-act="clock-breaths">Breaths</button></div>
+      <div style="position:relative;width:354.5px;height:215px">
+        <img src="assets/wheel.png" alt="" style="position:absolute;left:90px;top:0;width:297px;height:215px;object-fit:cover">
+        <div class="abs" style="left:218.5px;top:15px;width:113px;height:194px;background:var(--n900)"></div>
+        <div class="abs" style="left:0;top:90px;width:297px;height:34px;border-radius:7px;background:var(--w10)"></div>
+        <div class="abs" style="left:145.5px;top:90px;width:197px;height:34px;border-radius:8px;background:#46494d"></div>
+        <p class="abs b" style="left:166.5px;top:95px;font-size:21px">8</p>
+        <p class="abs" id="clockUnit" style="left:220.5px;top:94px;font-size:21px;color:rgba(255,255,255,.5)">minutes</p>
+      </div>
+      <div style="text-align:center"><p class="b" id="clockSum">48 breaths</p><p style="color:rgba(255,255,255,.5)">Based on 5:5 ratio setting</p></div>
+      <div style="width:358px;height:40px;display:flex;justify-content:space-between;align-items:center"><p class="b" style="font-size:18px">Enable timer</p><button class="toggle" data-act="toggle" aria-label="Enable timer"></button></div>
+      <div style="width:358px"><button class="btn white" data-close data-toast="Timer saved" style="width:358px">Save</button><button class="btn" data-close style="width:342px;height:48px;margin:8px 8px 0">Cancel</button></div>
+    </div>
+  </section>
+
+  <div id="toast"></div>
+  <div class="home-ind"></div>
+</div></div></main>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const img = (n, s, extra = '') => `<img src="assets/${n}.svg" width="${s}" height="${s}" alt="" ${extra}>`;
+
+/* Font Awesome Pro glyphs from the design, drawn as stand-ins */
+const ICO = {
+  smile: `<svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#fff"/><circle cx="11" cy="13" r="2.2" fill="#1a1e23"/><circle cx="21" cy="13" r="2.2" fill="#1a1e23"/><path d="M9.5 19.5c1.6 2.6 3.9 3.9 6.5 3.9s4.9-1.3 6.5-3.9" fill="none" stroke="#1a1e23" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+  pace: `<svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M13 3a10 10 0 1 1-7.4 3.3"/><path d="M13 3v4M9 9l4 4.5"/></svg>`,
+  glass: `<svg width="22" height="24" viewBox="0 0 22 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2h16M3 22h16M5 2c0 5 6 7 6 10s-6 5-6 10M17 2c0 5-6 7-6 10s6 5 6 10"/></svg>`,
+};
+
+/* ---------- gradients (Figma radial gradient, same stops everywhere) ---------- */
+const HEAD = [[26,50,83,1,0],[42,85,118,1,.375],[66,105,127,1,.48958],[95,117,126,1,.53255],[124,129,125,1,.57552],[183,152,123,1,.66146],[233,144,75,1,.73438],[229,122,53,1,.77604],[225,100,31,1,.81771],[168,59,22,1,.85938],[139,39,17,1,.88021],[111,19,13,1,.90104]];
+const TAIL = [[83,14,10,1,.92208],[55,9,6,1,.94311],[28,5,3,1,.96415],[14,2,2,1,.97466],[0,0,0,1,.98518]];
+const ORB = [[55,9,6,.5,.95052],[0,0,0,0,1]];
+function grad(w, h, m, orb) {
+  const stops = HEAD.concat(orb ? ORB : TAIL).map(([r,g,b,a,o]) => `<stop stop-color='rgba(${r},${g},${b},${a})' offset='${o}'/>`).join('');
+  const svg = `<svg viewBox='0 0 ${w} ${h}' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect width='100%' height='100%' fill='url(#g)'/><defs><radialGradient id='g' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(${m})'>${stops}</radialGradient></defs></svg>`;
+  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
+}
+
+/* ---------- screen templates ---------- */
+const lib = (k, t, go) => `<button class="libcard" ${go ? `data-go="${go}"` : 'data-toast="Not part of this prototype"'}><p>${k}</p><h3>${t}</h3></button>`;
+const lane = top => `<p class="b" style="margin:${top}px 16px 8px;font-size:18px">Guided practices</p><div class="lane">${lib('Practice Introduction', 'Guided Resonance', 'p-balanced')}${lib('Breathing Practice', 'Focusing Breath', 'p-sleep')}</div>`;
+const dhead = t => `<div class="dhead"><button data-back style="left:0">${img('cross', 28)}</button><p>${t}</p><button data-go="today" data-toast="Marked as done" style="right:0;top:0">${img('check-solid', 32)}</button></div>`;
+
+function player(id, o) {
+  return `<section class="screen" id="${id}" data-grad="390 844 ${o.m}" style="background-color:#000">
+    <button class="tl" data-back aria-label="Close"></button>
+    <button class="slider" data-go="${o.details}" aria-label="Details">${`<img src="assets/slider.svg" width="66" height="6" alt="">`}</button>
+    ${o.chip ? `<button class="pill abs" data-sheet="sheet-ratio" style="left:309px;top:76px;width:55px">${o.chip}</button>` : ''}
+    <div class="ptitle" style="top:${o.top}px" data-go="${o.details}"><p>${o.kicker}</p><h2 class="serif" ${o.lh ? `style="line-height:${o.lh}px"` : ''}>${o.title}</h2><small>${o.sub}</small></div>
+    <button class="pico" data-sheet="sheet-ratio" style="left:82px;top:${o.cy + 40}px" aria-label="Set the pace">${ICO.pace}</button>
+    <button class="hero" data-act="play" data-secs="${o.min * 60}" style="top:${o.cy}px"><span class="ico">${img('play', 24)}<i class="pause"></i></span><span class="lbl">${o.min} min</span></button>
+    <button class="pico" data-sheet="sheet-clock" style="left:${o.gx}px;top:${o.cy + 40}px" aria-label="Set the timer">${ICO.glass}</button>
+    <p class="plabel" style="top:${o.label[1]}px">${o.label[0]}</p>
+  </section>`;
+}
+
+function about(id, m, t1, t2, bg) {
+  return `<section class="screen" id="${id}" data-grad="390 844 ${m}" style="background-color:${bg}">${dhead('Resonance Breath')}
+    <div class="scroll"><div style="margin:${t1}px 16px 0">
+      <p class="b" style="font-size:24px;line-height:24px">About Resonance Breath</p>
+      <div style="display:flex;gap:8.4px;align-items:center;margin-top:4.2px"><i style="width:2px;height:32px;background:rgba(255,255,255,.5)"></i><p style="font-size:14px;line-height:20px">Eddie Stern, MSc<br>Yoga Teacher, Researcher, Author</p></div>
+      <p style="margin-top:16px;width:334px">This ratio is designed to stabilize the nervous system through the retention and exhalation being the same length... <span style="color:var(--light)" data-toast="Article is not part of this prototype">Learn more</span></p>
+    </div>${lane(t2)}</div></section>`;
+}
+
+const weekBars = [[3,42,84],[37,50,76],[71,14,112],[105,32,94]];
+const planChart = `<div class="chart" style="width:318px;height:157px">
+  ${[[6,'60 min'],[66,'30 min'],[126,'0']].map(([y,l]) => `<i class="g" style="top:${y}px;width:272px"></i><span class="ax" style="left:280px;top:${y-6}px">${l}</span>`).join('')}
+  ${[...Array(8)].map((_, i) => { const x = 3 + 34 * i, p = weekBars[i];
+    return `<i class="bar" style="left:${x}px;top:6px;width:24px;height:120px;background:rgba(148,199,184,${i < 4 ? .09 : .18})"></i>${p ? `<i class="bar" style="left:${x}px;top:${p[1]}px;width:24px;height:${p[2]}px;background:${i === 3 ? '#94c7b8' : 'rgba(148,199,184,.7)'}"></i>` : ''}<span class="lb ${i === 3 ? 'on' : ''}" style="left:${x + 12}px">${i + 1}</span>`; }).join('')}
+</div>`;
+const dayBars = { 1: ['#69b8ab','rgba(105,184,171,.55)',37.2,84.8], 2: ['#87a9d4','rgba(135,169,212,.55)',53.1,68.9], 3: ['#b4a1d4','rgba(180,161,212,.55)',26.6,95.4], 6: ['rgba(220,165,105,.4)','rgba(220,165,105,.15)',58.4,63.6] };
+const weekChart = `<div class="chart" style="width:322px;height:152px">
+  ${[[8,'20 min'],[65,'10 min'],[122,'0 min']].map(([y,l]) => `<i class="g" style="top:${y}px;width:275px"></i><span class="ax" style="left:282px;top:${y-7}px">${l}</span>`).join('')}
+  ${'MTWTFSS'.split('').map((d, i) => { const x = 6 + 39 * i, b = dayBars[i];
+    return `${b ? `<i class="bar" style="left:${x}px;top:${b[2]}px;width:25px;height:${b[3]}px;background:linear-gradient(${b[0]},${b[1]})"></i>` : ''}<span class="lb ${i === 3 ? 'on' : ''}" style="left:${x + 13}px;top:132px;width:32px;margin-left:-16px;${i === 3 ? '' : 'color:rgba(255,255,255,.5)'}">${d}</span>`; }).join('')}
+</div>`;
+const workout = (d, c, n, m, dim, go) => `<button ${go ? `data-go="${go}"` : 'data-toast="Only Calming is wired in this prototype"'} style="display:flex;gap:12px;align-items:center"><span class="muted" style="width:29px;font-size:13px;line-height:18px">${d}</span><i style="width:14px;height:14px;border-radius:4px;background:${c}"></i><span class="b" style="width:165px;font-size:15px;line-height:20px;${dim ? 'color:var(--w60)' : ''}">${n}</span><span class="muted" style="width:64px;text-align:right;font-size:13px;line-height:18px">${m} min</span></button>`;
+const histRow = (d, n, r, b) => `<i style="display:block;height:1px;background:rgba(255,255,255,.08)"></i><div style="display:flex;gap:12px;align-items:center;padding:10px 0"><div style="width:138px"><p class="b" style="font-size:15px;line-height:20px">${d}</p><p style="font-size:12px;line-height:16px;color:rgba(255,255,255,.5);margin-top:3px">${n}</p></div><p class="b" style="width:94px;font-size:14px;line-height:19px;color:rgba(255,255,255,.85)">${r}</p><p class="b" style="width:62px;text-align:right;font-size:17px;line-height:23px;color:rgba(255,255,255,.85)">${b}</p></div>`;
+
+$('#screens').innerHTML = `
+<!-- Today · 0:533 -->
+<section class="screen" id="today"><div class="scroll">
+  <p class="serif" style="margin:74px 0 0 19px;font-size:32px;line-height:40px;color:#f2f2f2;width:224px;white-space:nowrap">Hi, Katsiaryna</p>
+  <button class="abs" data-go="profile" style="left:338px;top:77px;width:32px;height:32px" aria-label="Your profile">${ICO.smile}</button>
+  <button class="card" data-go="plan" style="display:flex;flex-direction:column;gap:13px;margin:18px 16px 0;padding:18px;width:358px">
+    <p class="b" style="font-size:17px;line-height:23px">Week 4 overview</p>
+    <div class="bars"><i></i><i></i><i></i><i class="off"></i></div>
+    <div class="b" style="display:flex;justify-content:space-between;width:322px;font-size:13px;line-height:18px;color:rgba(255,255,255,.8)"><span>Workouts: 3/4</span><span>Minutes: 47/60</span></div>
+  </button>
+  <div class="stack" id="stack">
+    <div class="w" style="left:27px;top:54px;width:322.2px;height:332.2px"><div class="tune" data-grad="280 292 4.3933e-15 94.053 -205.36 -3.3907e-13 140 -667.73" style="width:280px;height:292px;transform:rotate(9deg)"></div></div>
+    <div class="w" style="left:43.6px;top:59px;width:314.4px;height:321.8px"><div class="tune" data-grad="294 302 -4.7226e-15 88.721 -196.66 -3.2754e-13 147 128.1" style="width:294px;height:302px;transform:rotate(4deg)"></div></div>
+    <div class="w" style="left:42.7px;top:56.3px;width:315.8px;height:325.3px"><button id="tuneCard" class="tune" data-go="p-balanced" data-grad="300 310 -8.2965e-15 112.19 -247.22 -3.395e-13 150 -554.8" style="width:300px;height:310px;transform:rotate(-3deg);border-color:rgba(255,255,255,.25);padding:24px;display:flex;flex-direction:column;gap:14px;align-items:flex-start">
+      <span class="b" style="font-size:11px;line-height:15px;color:rgba(255,255,255,.75)">RESONANCE TUNE</span>
+      <span class="serif" id="tuneName" style="font-size:38px;line-height:51px">Majoer</span>
+      <span style="font-size:17px;line-height:23px;color:rgba(255,255,255,.9)">A sound to breathe with.<br>Follow your own rhythm.</span>
+    </button></div>
+    <div class="dots"><button class="on" data-act="tune" data-i="0" aria-label="Majoer"></button><button data-act="tune" data-i="1" aria-label="Moby"></button></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin:0 16px">
+    ${lib('Breathing Practice', 'Resonance Breath', 'p-balanced')}${lib('Breathing Practice', 'Personal Ratio', 'p-sleep')}
+    ${lib('Resonance Practice', 'Maejor', 'p-balanced')}${lib('Resonance Practice', 'Naomi', 'p-balanced')}
+    <button class="libcard row" data-toast="Favorites is not part of this prototype"><p>Your Favorites</p><span class="t">${img('chevron-right', 24)}</span></button>
+    <button class="libcard row" data-go="plan"><p>Your Activities</p><span class="t">${img('chevron-right', 24)}</span></button>
+  </div>
+</div></section>
+
+<!-- Your profile · 0:699 -->
+<section class="screen" id="profile"><button class="pill back" data-back>Back</button><div class="scroll">
+  <p class="serif" style="margin:122px 0 0 19px;font-size:32px;line-height:30px">Your profile</p>
+  <div style="position:relative;height:56px;margin-top:24px;white-space:nowrap">
+    <div class="abs" style="left:16px"><p style="font-size:14px;line-height:20px;color:#babcbd">Breath Count</p><p class="serif" style="font-size:25px;line-height:1.3;margin-top:4px">54</p></div>
+    <div class="abs" style="left:144px"><p style="font-size:14px;line-height:20px;color:#babcbd">Mindful Minutes</p><p class="serif" style="font-size:25px;line-height:1.3;margin-top:4px">2435</p></div>
+  </div>
+  <div style="position:relative;height:417px;margin-bottom:7px">
+    <button class="abs" data-go="ratio-history" data-grad="410 410 3.5357e-13 18.078 -18.078 -1.2005e-9 205 204.5" data-orb style="left:-10px;top:7px;width:410px;height:410px;border-radius:50%;background-size:100% 100%" aria-label="Ratio history"></button>
+    <p class="abs" style="left:0;top:140.5px;width:390px;text-align:center;pointer-events:none">Personal ratio</p>
+    <p class="abs serif ratioText" style="left:0;top:178px;width:390px;text-align:center;font-size:40px;line-height:1.3;pointer-events:none">5.4 : 5.6</p>
+    <button class="pill abs" data-sheet="sheet-ratio" style="left:163.5px;top:251px;width:60px">Edit</button>
+  </div>
+  <button class="card" data-go="plan" style="display:flex;flex-direction:column;gap:16px;margin:0 16px;padding:16px 20px;width:358px;background:rgba(255,255,255,.05)">
+    <p class="b" style="font-size:18px">Plan overview</p>${planChart}
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:14px;align-items:center"><img src="assets/ring-week.svg" width="34" height="34" alt=""><div><p class="muted" style="font-size:13px;line-height:18px">This week</p><p class="b" style="font-size:18px;margin-top:3px">3 of 4 workouts</p></div></div>
+      <div style="display:flex;gap:14px;align-items:center"><span style="width:34px;height:34px;position:relative;flex:none"><img src="assets/ring-plan.svg" width="17" height="29.48" alt="" style="position:absolute;left:17px;top:0"></span><div><p class="muted" style="font-size:13px;line-height:18px">Plan minutes</p><p class="b" style="font-size:18px;margin-top:3px">183 of 480 min</p></div></div>
+    </div>
+  </button>
+</div></section>
+
+<!-- Your breathing ratio · 0:763 -->
+<section class="screen" id="ratio-history"><button class="pill back" data-back>Back</button>
+  <div style="position:absolute;left:16px;top:122px;width:358px;display:flex;flex-direction:column;gap:16px">
+    <p class="serif" style="font-size:26px;line-height:35px">Your breathing ratio</p>
+    <p style="font-size:15px;line-height:20px;color:rgba(255,255,255,.65)">Your pace adapts after calibration. It may become slower or faster to fit you.</p>
+    <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;line-height:15px"><span class="b muted">CURRENT RATIO</span><span style="color:rgba(255,255,255,.5)">Updated Oct 15</span></div>
+      <div style="display:flex;gap:18px">
+        <div style="width:150px"><p class="muted" style="font-size:14px;line-height:19px">Inhale</p><p class="serif" id="inS" style="font-size:34px;line-height:46px;margin-top:6px">5.4 s</p></div>
+        <div style="width:150px"><p class="muted" style="font-size:14px;line-height:19px">Exhale</p><p class="serif" id="exS" style="font-size:34px;line-height:46px;margin-top:6px">5.6 s</p></div>
+      </div>
+      <p class="b" id="bpmS" style="font-size:15px;line-height:20px">6.0 breaths / min</p>
+    </div>
+    <div class="card" style="padding:18px 20px 6px;background:rgba(255,255,255,.04)">
+      <p class="b" style="font-size:18px">Calibration history</p>
+      <div class="b" style="display:flex;gap:12px;padding:14px 0 10px;font-size:10px;line-height:14px;color:rgba(255,255,255,.4)"><span style="width:138px">CALIBRATED</span><span style="width:94px">IN / OUT</span><span style="width:62px;text-align:right">BREATHS/MIN</span></div>
+      ${histRow('Oct 15', 'Faster pace', '5.0 / 5.0 s', '6.0')}${histRow('Oct 8', 'Slower pace', '5.5 / 5.5 s', '5.5')}${histRow('Oct 1', 'Starting pace', '5.0 / 5.0 s', '6.0')}
+    </div>
+  </div>
+  <button class="btn ghost abs" data-sheet="sheet-ratio" style="left:16px;top:738px;width:358px">Calibrate again</button>
+</section>
+
+<!-- Your workout plan · 5:1996 -->
+<section class="screen" id="plan"><button class="pill back" data-back>Back</button><div class="scroll">
+  <div style="margin:122px 16px 0;display:flex;flex-direction:column;gap:16px"><p class="serif" style="font-size:26px;line-height:35px">Your workout plan</p><p style="font-size:15px;line-height:20px;color:rgba(255,255,255,.65)">Your pace adapts after calibration. It may become slower or faster to fit you.</p></div>
+  <div class="card" style="margin:24px 16px 0;padding:18px;display:flex;flex-direction:column;gap:12px">
+    <p class="b" id="rangeTitle" style="font-size:22px;line-height:30px">This week</p><p class="muted" id="rangeDates" style="font-size:14px;line-height:19px">12–18 October</p>${weekChart}
+    <div style="display:flex;gap:20px">
+      <div style="width:151px"><p class="muted" style="font-size:13px;line-height:18px">Minutes</p><p class="b" id="rangeMin" style="font-size:22px;line-height:30px;margin-top:3px">47 / 60</p></div>
+      <div style="width:151px"><p class="muted" style="font-size:13px;line-height:18px">Sessions</p><p class="b" id="rangeSes" style="font-size:22px;line-height:30px;margin-top:3px">3 / 4</p></div>
+    </div>
+  </div>
+  <div class="seg" style="margin:16px 16px 0"><button class="on" data-act="range" data-i="0">Week</button><button data-act="range" data-i="1">Month</button><button data-act="range" data-i="2">All</button></div>
+  <div class="card" style="margin:18px 16px 0;padding:18px;display:flex;flex-direction:column;gap:18px;background:rgba(255,255,255,.04)">
+    <p class="b" style="font-size:18px">Your workouts</p>
+    ${workout('Tue', '#69b8ab', 'Calming', 16, 0, 'p-calming')}${workout('Wed', '#87a9d4', 'Focusing', 13)}${workout('Thu', '#b4a1d4', 'Sleep', 18)}${workout('Sun', 'rgba(220,165,105,.5)', 'Energizing', 12, 1)}
+  </div>
+</div></section>
+
+${player('p-calming', { m: '2.6698e-14 63.795 -67.122 -1.9305e-13 195 150.57', details: 'd-calming', top: 282, kicker: 'Your Journey', title: 'Calming Workout', sub: 'Belly Breathing', min: 3, cy: 650, gx: 313, label: ['Exercise 1 of 5', 760] })}
+${player('p-balanced', { m: '6.1192e-15 271.85 -286.03 -9.8004e-13 195 -1930', details: 'd-balanced', top: 275, kicker: 'Breathing Practice', title: 'Resonance<br>Frequency', sub: '5 seconds in · 5 seconds out', min: 2, cy: 650, gx: 316, label: ['Balanced ratio', 760], chip: '4:6' })}
+${player('p-sleep', { m: '-1.0785e-14 305.45 -321.38 -9.243e-13 195 -1510.5', details: 'd-sleep', top: 264, lh: 62, kicker: 'Breathing Practice', title: 'Sleep<br>Sequence', sub: 'Fine-tune your pattern', min: 2, cy: 653, gx: 327, label: ['Resonance ratio', 759] })}
+
+<!-- Player details (Calming workout) · 0:345 -->
+<section class="screen" id="d-calming" data-grad="390 844 1.8018e-15 87.8 -92.379 -1.5331e-13 195 -374.5" style="background-color:#000">${dhead('Calming workout')}<div class="scroll">
+  <div style="margin:127px 16px 0;width:358px;display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;gap:10px;align-items:center">${img('replay', 24)}<p class="b" style="font-size:18px">16 minutes · 5 exercises</p></div>
+    <div class="card" style="padding:18px 20px;display:flex;flex-direction:column;gap:8px"><p style="font-size:18px;line-height:26px">Personalized workout briefing</p><p style="font-size:14px;line-height:19px;color:rgba(255,255,255,.7)">Move from gentle belly breathing to a guided relaxation. Follow each exercise at a comfortable pace.</p></div>
+    <div style="display:flex;gap:12px"><button class="act" data-go="d-balanced">${img('info', 20)}<span>How to breathe</span></button><button class="act" data-go="ratio-history">${img('replay', 20)}<span>Calibrate</span></button></div>
+    <div class="card seq" style="background:rgba(255,255,255,.05)">
+      <p class="b" style="padding:12px 18px;background:rgba(148,199,184,.16);line-height:22px">Your practice · 1–5</p>
+      ${[['Belly Breathing',3],['Cyclic Sighing',2],['Left Nostril',3],['Humming Breath',3],['Guided Relaxation',5]].map(([t,m],i) => `<div ${i ? '' : 'data-back'} style="${i ? '' : 'cursor:pointer'}"><span class="n">${i+1}</span><span class="t">${t}</span><span class="m">${m} min</span></div>`).join('')}
+    </div>
+  </div>${lane(21)}
+</div></section>
+
+${about('d-balanced', '5.4788e-15 243.4 -256.09 -8.171e-13 195 -1930', 142, 24, '#1a1e23')}
+${about('d-sleep', '-9.9574e-15 282 -296.71 -8.5334e-13 195 -1744', 143, 36, '#000')}
+`;
+
+$$('[data-grad]').forEach(el => { const [w, h, ...m] = el.dataset.grad.split(' '); el.style.backgroundImage = grad(w, h, m.join(' '), el.hasAttribute('data-orb')); el.style.backgroundSize = '100% 100%'; });
+
+/* ---------- navigation ---------- */
+const FRAMES = [
+  ['today', 'Today'], ['plan', 'Your workout plan'], ['profile', 'Your profile'], ['ratio-history', 'Your breathing ratio'],
+  ['p-calming', 'Player · Calming workout'], ['d-calming', 'Details · Calming workout'],
+  ['p-balanced', 'Player · Resonance, balanced'], ['d-balanced', 'Details · Resonance Breath'],
+  ['p-sleep', 'Player · Sleep Sequence'], ['d-sleep', 'Details · Resonance Breath (alt)'],
+  ['sheet-ratio', 'Sheet · Set the pace'], ['sheet-clock:minutes', 'Sheet · Timer, minutes'], ['sheet-clock:breaths', 'Sheet · Timer, breaths'],
+];
+const HINTS = {
+  'today': 'Smiley → profile. Week card → workout plan. Tune card or any practice → player. Dots under the tune stack switch tunes.',
+  'plan': 'Week / Month / All switch the range. “Calming” opens the workout player.',
+  'profile': 'Edit → Set the pace sheet. Orb → ratio history. Plan overview → workout plan.',
+  'ratio-history': 'Calibrate again → Set the pace sheet.',
+  'p-calming': 'Play starts a countdown. Left icon → pace sheet, hourglass → timer sheet. Page dots or title → details. Top-left corner → back.',
+  'p-balanced': 'Play starts a countdown. 4:6 chip or left icon → pace sheet, hourglass → timer sheet. Page dots or title → details.',
+  'p-sleep': 'Play starts a countdown. Left icon → pace sheet, hourglass → timer sheet. Page dots or title → details.',
+  'd-calming': '✕ → back to player. ✓ → done, back to Today. How to breathe → about. Calibrate → ratio history.',
+  'd-balanced': '✕ → back. ✓ → done, back to Today. Guided practice cards open players.',
+  'd-sleep': '✕ → back. ✓ → done, back to Today. Guided practice cards open players.',
+  'sheet-ratio': 'Chevrons change the ratio, Save applies it to the profile and ratio screens. Calibrate personal ratio → ratio history.',
+  'sheet-clock': 'Minutes / Breaths tabs switch the two frames. Toggle, Save and Cancel work.',
+};
+let stack = ['today'], sheet = null, timer = null;
+const cur = () => stack[stack.length - 1];
+
+function render() {
+  $$('.screen').forEach(s => s.classList.toggle('active', s.id === cur()));
+  $$('.sheet').forEach(s => s.classList.toggle('on', s.id === sheet));
+  $('#scrim').classList.toggle('on', !!sheet);
+  const key = sheet ? (sheet === 'sheet-clock' ? `sheet-clock:${clockMode}` : sheet) : cur();
+  $$('#index button').forEach(b => b.classList.toggle('on', b.dataset.jump === key));
+  $('#hint').textContent = HINTS[sheet || cur()] || '';
+}
+function go(id) { stopPlay(); sheet = null; if (id === 'today') stack = ['today']; else if (cur() !== id) stack.push(id); const sc = $('#' + id + ' .scroll'); if (sc) sc.scrollTop = 0; render(); }
+function back() { stopPlay(); if (sheet) sheet = null; else if (stack.length > 1) stack.pop(); render(); }
+function openSheet(id) { sheet = id; if (id === 'sheet-ratio') { draft = [...ratio]; paintSheet(); } render(); }
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 1600); }
+
+/* ---------- state: ratio, timer, tunes, range ---------- */
+let ratio = [5.4, 5.6], draft = [...ratio], clockMode = 'minutes', tune = 0;
+const fmt = r => `${r[0].toFixed(1)} : ${r[1].toFixed(1)}`;
+function paintSheet() { $('#sheetRatio').textContent = fmt(draft); $('#sheetBpm').textContent = `${Math.round(60 / (draft[0] + draft[1]) * 10) / 10} bpm`.replace('5.5 bpm', '6 bpm'); }
+function setClock(m) { clockMode = m; $$('#clockTabs button').forEach((b, i) => b.classList.toggle('on', (i === 0) === (m === 'minutes'))); $('#clockUnit').textContent = m; $('#clockUnit').style.left = m === 'minutes' ? '220.5px' : '223.5px'; $('#clockSum').textContent = m === 'minutes' ? '48 breaths' : '1:20 practice duration'; }
+const TUNES = [['Majoer', -3], ['Moby', 3]];
+function setTune(i) { tune = i; const c = $('#tuneCard'); c.style.opacity = .4; setTimeout(() => { $('#tuneName').textContent = TUNES[i][0]; c.style.transform = `rotate(${TUNES[i][1]}deg)`; c.style.opacity = 1; }, 140); $$('.dots button').forEach((b, k) => b.classList.toggle('on', k === i)); }
+const RANGES = [['This week', '12–18 October', '47 / 60', '3 / 4'], ['This month', 'October', '183 / 240', '12 / 16'], ['All time', 'Since 1 October', '183 / 480', '12 / 32']];
+function stopPlay() { clearInterval(timer); timer = null; $$('.hero.playing').forEach(h => { h.classList.remove('playing'); $('.lbl', h).textContent = `${h.dataset.secs / 60} min`; }); }
+
+const ACTS = {
+  play(el) { if (el.classList.contains('playing')) return stopPlay(); stopPlay(); let s = +el.dataset.secs; el.classList.add('playing'); const tick = () => { $('.lbl', el).textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; if (s-- <= 0) stopPlay(); }; tick(); timer = setInterval(tick, 1000); },
+  'ratio-up'() { draft = draft.map(v => Math.max(2, +(v - .1).toFixed(1))); paintSheet(); },
+  'ratio-down'() { draft = draft.map(v => Math.min(10, +(v + .1).toFixed(1))); paintSheet(); },
+  'ratio-save'() { ratio = [...draft]; $$('.ratioText').forEach(e => e.textContent = fmt(ratio)); $('#inS').textContent = `${ratio[0].toFixed(1)} s`; $('#exS').textContent = `${ratio[1].toFixed(1)} s`; $('#bpmS').textContent = `${(60 / (ratio[0] + ratio[1])).toFixed(1)} breaths / min`.replace('5.5 breaths', '6.0 breaths'); sheet = null; render(); toast('Pace saved'); },
+  'clock-minutes'() { setClock('minutes'); render(); }, 'clock-breaths'() { setClock('breaths'); render(); },
+  toggle(el) { el.classList.toggle('off'); },
+  tune(el) { setTune(+el.dataset.i); },
+  range(el) { const r = RANGES[+el.dataset.i]; $$('.seg button').forEach(b => b.classList.toggle('on', b === el)); $('#rangeTitle').textContent = r[0]; $('#rangeDates').textContent = r[1]; $('#rangeMin').textContent = r[2]; $('#rangeSes').textContent = r[3]; },
+};
+
+$('#phone').addEventListener('click', e => {
+  const el = e.target.closest('[data-act],[data-go],[data-sheet],[data-back],[data-close],[data-toast]'); if (!el) return;
+  const d = el.dataset;
+  if (d.act) return ACTS[d.act](el);
+  if (d.toast) toast(d.toast);
+  if (d.go) go(d.go); else if (d.sheet) openSheet(d.sheet); else if ('back' in d) back(); else if ('close' in d) { sheet = null; render(); }
+});
+
+/* swipe the tune stack */
+let sx = null; const st = $('#stack');
+st.addEventListener('pointerdown', e => sx = e.clientX);
+st.addEventListener('pointerup', e => { if (sx !== null && Math.abs(e.clientX - sx) > 40) { setTune(1 - tune); st.addEventListener('click', ev => ev.stopPropagation(), { capture: true, once: true }); } sx = null; });
+
+/* sidebar */
+$('#index').innerHTML = FRAMES.map(([id, n], i) => `<li><button data-jump="${id}"><span>${i + 1}</span>${n}</button></li>`).join('');
+$('#index').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const [id, mode] = b.dataset.jump.split(':');
+  if (id.startsWith('sheet')) { stopPlay(); stack = id === 'sheet-ratio' ? ['today', 'profile'] : ['today', 'p-calming']; if (mode) setClock(mode); openSheet(id); }
+  else { stopPlay(); sheet = null; stack = id === 'today' ? ['today'] : ['today', id]; render(); } });
+$('#navBack').onclick = back; $('#navHome').onclick = () => go('today');
+$('#hot').onchange = e => document.body.classList.toggle('hot', e.target.checked);
+addEventListener('keydown', e => { if (e.key === 'Escape' || e.key === 'ArrowLeft') back(); });
+
+function fit() { const m = $('main'), s = Math.min(1, (m.clientHeight - 24) / 844, (m.clientWidth - 24) / 390); $('#fit').style.transform = `scale(${s})`; $('#fit').style.margin = `${-(844 * (1 - s)) / 2}px ${-(390 * (1 - s)) / 2}px`; }
+addEventListener('resize', fit); fit(); render();
+</script>
+</body>
+</html>
